@@ -1,4 +1,3 @@
-cat > config.py << 'EOF'
 import os
 
 # Proje kök dizini
@@ -22,4 +21,3 @@ DETECTION_THRESHOLD = 0.90
 WEB_HOST = "0.0.0.0"
 WEB_PORT = 5000
 DEBUG = False
-EOF
