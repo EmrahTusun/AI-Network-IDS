@@ -1,5 +1,3 @@
-cat >> .gitignore << 'EOF'
-
 # Proje spesifik
 *.db
 *.db-journal
@@ -21,4 +19,3 @@ venv/
 .vscode/
 .idea/
 *.swp
-EOF
