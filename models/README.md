@@ -1,4 +1,3 @@
-cat > models/README.md << 'EOF'
 # Models Directory
 
 This directory contains trained machine learning models.
@@ -11,4 +10,3 @@ This directory contains trained machine learning models.
 ## Note
 Model files are NOT included in Git due to size. 
 Download from: [link-buraya-eklenecek]
-EOF
