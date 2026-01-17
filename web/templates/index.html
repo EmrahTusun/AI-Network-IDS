@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Güvenlik Yönetim Paneli</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            /* --- BEYAZ KURUMSAL TEMA --- */
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #2563eb;
+            --danger: #ef4444;
+            --success: #16a34a;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden; /* tek ekran */
+        }
+
+        /* --- GRID DÜZENİ --- */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr 1fr;
+            grid-template-rows: 60px 120px 1fr 1fr;
+            height: 100vh;
+            gap: 15px;
+            padding: 15px;
+        }
+
+        /* GENEL PANEL */
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        /* Başlık (tüm paneller için standart) */
+        .panel-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: #f1f5f9;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+        }
+
+        .panel-header .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            grid-row: 1 / 5;
+            display: flex;
+            flex-direction: column;
+            padding: 18px 0;
+        }
+        .logo-area {
+            text-align: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 14px;
+        }
+        .nav-item {
+            padding: 12px 22px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            transition: 0.2s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background-color: #eff6ff;
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+        .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+
+        /* HEADER */
+        .header {
+            grid-column: 2 / 4;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+        }
+
+        /* KPI */
+        .kpi-container {
+            grid-column: 2 / 4;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .kpi-card {
+            padding: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .kpi-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+        .kpi-val { font-size: 1.55rem; font-weight: 900; margin-top: 6px; color: var(--text-main); line-height: 1; }
+        .icon-box { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .bg-blue-light { background: #dbeafe; color: var(--primary); }
+        .bg-red-light { background: #fee2e2; color: var(--danger); }
+
+        /* GRAFİK & IP */
+        .chart-area {
+            grid-column: 2 / 3;
+            grid-row: 3 / 4;
+            position: relative;
+        }
+        .chart-body {
+            height: calc(100% - 44px);
+            padding: 10px 14px 14px 14px;
+        }
+        .chart-wrap {
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        .ip-area {
+            grid-column: 3 / 4;
+            grid-row: 3 / 4;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* LOGLAR & TRAFİK */
+        .logs-area {
+            grid-column: 2 / 3;
+            grid-row: 4 / 5;
+            display: flex;
+            flex-direction: column;
+        }
+        .traffic-area {
+            grid-column: 3 / 4;
+            grid-row: 4 / 5;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* TABLO */
+        .table-wrap { overflow-y: auto; flex-grow: 1; }
+        .clean-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+        .clean-table th {
+            text-align: left; padding: 10px 16px;
+            background: #f8fafc; color: var(--text-muted);
+            font-weight: 700; border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 10;
+        }
+        .clean-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .clean-table tr:hover { background-color: #f1f5f9; }
+
+        /* BUTONLAR */
+        .btn-custom { padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.82rem; border: none; cursor: pointer; }
+        .btn-pri { background: var(--primary); color: white; }
+        .btn-dan { background: var(--danger); color: white; }
+        .btn-out { background: white; border: 1px solid #cbd5e1; color: var(--text-muted); }
+        .btn-out:hover { background: #f1f5f9; }
+        .icon-btn {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        .icon-btn:hover { background: #f1f5f9; }
+
+        /* ROZETLER */
+        .tag { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 900; display: inline-block; }
+        .tag-red { background: #fee2e2; color: #b91c1c; }
+        .tag-orange { background: #ffedd5; color: #c2410c; }
+        .tag-blue { background: #dbeafe; color: #1e40af; }
+        .tag-green { background: #dcfce7; color: #15803d; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* Responsive (çok dar ekranlar için) */
+        @media (max-width: 1100px) {
+            body { overflow: auto; }
+            .app-grid { height: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
+            .sidebar { grid-row: auto; }
+            .header { grid-column: auto; }
+            .kpi-container { grid-column: auto; grid-template-columns: repeat(2, 1fr); }
+            .chart-area, .ip-area, .logs-area, .traffic-area { grid-column: auto; grid-row: auto; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-grid">
+
+    <!-- Sidebar -->
+    <div class="sidebar panel">
+        <div class="logo-area">
+            <i class="fa-solid fa-shield-cat fa-2x text-primary mb-2"></i><br>
+            <span style="font-weight: 900; font-size: 1rem; color: var(--text-main);">GÜVENLİK MERKEZİ</span>
+        </div>
+        <div class="nav-item active"><i class="fa-solid fa-gauge-high"></i>Kontrol Paneli</div>
+        <div class="nav-item"><i class="fa-solid fa-list-check"></i>Olay Günlükleri</div>
+        <div class="nav-item"><i class="fa-solid fa-network-wired"></i>Ağ İzleme</div>
+
+        <div style="margin-top:auto; padding:18px; text-align:center;">
+            <span id="status-badge" class="tag tag-blue">SİSTEM HAZIR</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header panel">
+        <div style="font-weight: 900; font-size: 1.05rem;">
+            <i class="fa-solid fa-server me-2 text-primary"></i> AI Destekli Log Analizi
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <select id="arayuz-secimi" class="form-select form-select-sm" style="width: 160px; border-color: #cbd5e1;">
+                {% for iface in interfaces %}
+                <option value="{{ iface }}">{{ iface }}</option>
+                {% endfor %}
+            </select>
+
+            <button onclick="baslat()" id="btn-baslat" class="btn-custom btn-pri">
+                <i class="fa-solid fa-play me-2"></i>BAŞLAT
+            </button>
+            <button onclick="durdur()" id="btn-durdur" class="btn-custom btn-dan d-none">
+                <i class="fa-solid fa-stop me-2"></i>DURDUR
+            </button>
+
+            <!-- Log temizleme: küçük ikon -->
+            <button onclick="temizle()" class="icon-btn" title="Kayıtları Temizle">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-container">
+        <div class="kpi-card panel">
+            <div>
+                <div class="kpi-label">Toplam Trafik</div>
+                <div class="kpi-val" id="sayac-paket">0</div>
+            </div>
+            <div class="icon-box bg-blue-light"><i class="fa-solid fa-server"></i></div>
+        </div>
+
+        <div class="kpi-card panel">
+            <div>
+                <div class="kpi-label">Tespit Edilen</div>
+                <div class="kpi-val" style="color: var(--danger);" id="sayac-saldiri">0</div>
+            </div>
+            <div class="icon-box bg-red-light"><i class="fa-solid fa-bug"></i></div>
+        </div>
+
+        <div class="kpi-card panel">
+            <div>
+                <div class="kpi-label">En Tehlikeli IP</div>
+                <div class="kpi-val" id="etiket-ip" style="font-size:1.15rem; margin-top:10px;">-</div>
+            </div>
+            <div class="icon-box" style="background:#fff7ed; color:#d97706;"><i class="fa-solid fa-location-dot"></i></div>
+        </div>
+
+        <div class="kpi-card panel">
+            <div>
+                <div class="kpi-label">Baskın Tür</div>
+                <div class="kpi-val" id="etiket-tur" style="font-size:1.15rem; margin-top:10px;">-</div>
+            </div>
+            <div class="icon-box" style="background:#f0fdf4; color:#059669;"><i class="fa-solid fa-fingerprint"></i></div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-area panel">
+        <div class="panel-header">
+            <span>ANOMALİ SKORU (CANLI)</span>
+            <span class="tag tag-blue" id="chart-mode">Polling</span>
+        </div>
+        <div class="chart-body">
+            <div class="chart-wrap">
+                <canvas id="canliGrafik"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- IP List -->
+    <div class="ip-area panel">
+        <div class="panel-header">
+            <span style="color: var(--danger);">EN RİSKLİ IP'LER</span>
+            <span class="tag tag-red" id="ip-count">0</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="clean-table">
+                <thead>
+                    <tr>
+                        <th width="45%">IP</th>
+                        <th width="20%">Sayı</th>
+                        <th width="35%">Tür</th>
+                    </tr>
+                </thead>
+                <tbody id="ip-tablosu">
+                    <tr><td colspan="3" class="text-center text-muted">Veri bekleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Logs -->
+    <div class="logs-area panel">
+        <div class="panel-header">
+            <span style="color: var(--primary);">
+                <i class="fa-solid fa-file-contract me-2"></i>TESPİT GÜNLÜĞÜ (SON 20)
+            </span>
+            <span class="tag tag-blue" id="log-count">0</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="clean-table">
+                <thead>
+                    <tr>
+                        <th width="20%">SAAT</th>
+                        <th width="34%">TÜR</th>
+                        <th width="23%">KAYNAK</th>
+                        <th width="23%">HEDEF</th>
+                    </tr>
+                </thead>
+                <tbody id="log-tablosu">
+                    <tr><td colspan="4" class="text-center text-muted">Kayıt yok.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Traffic -->
+    <div class="traffic-area panel">
+        <div class="panel-header">
+            <span style="color: var(--success);">
+                <i class="fa-solid fa-right-left me-2"></i>TÜM TRAFİK AKIŞI
+            </span>
+            <span class="tag tag-green" id="trafik-count">0</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="clean-table">
+                <thead>
+                    <tr>
+                        <th width="20%">ZAMAN</th>
+                        <th width="60%">KAYNAK → HEDEF:PORT</th>
+                        <th width="20%">PROTO</th>
+                    </tr>
+                </thead>
+                <tbody id="trafik-tablosu">
+                    <tr><td colspan="3" class="text-center text-muted">Dinleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let intervalId = null;
+    let chartInstance = null;
+
+    // Chart gradient
+    const ctx = document.getElementById('canliGrafik').getContext('2d');
+    let gradient = ctx.createLinearGradient(0, 0, 0, 260);
+    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
+    gradient.addColorStop(1, 'rgba(37, 99, 235, 0.02)');
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array(40).fill(''),
+            datasets: [{
+                label: 'Risk',
+                data: Array(40).fill(0),
+                borderColor: '#2563eb',
+                backgroundColor: gradient,
+                borderWidth: 2,
+                tension: 0.35,
+                pointRadius: 0,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: 12,
+                    grid: { color: '#eef2f7' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: { display: false }
+            },
+            animation: { duration: 0 }
+        }
+    });
+
+    function getTagClass(type) {
+        if (!type) return 'tag-blue';
+        type = (type + '').toLowerCase();
+        if (type.includes('ddos') || type.includes('flood')) return 'tag-red';
+        if (type.includes('sql') || type.includes('web')) return 'tag-orange';
+        if (type.includes('scan') || type.includes('brute')) return 'tag-orange';
+        return 'tag-blue';
+    }
+
+    function baslat() {
+        const arayuz = document.getElementById('arayuz-secimi').value;
+        fetch('/api/baslat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ interface: arayuz })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') guiGuncelle(true);
+            else alert(data.message || 'Başlatma hatası.');
+        });
+    }
+
+    function durdur() {
+        fetch('/api/durdur', { method: 'POST' })
+            .then(res => res.json())
+            .then(() => guiGuncelle(false));
+    }
+
+    function temizle() {
+        if (!confirm("Kayıtlar temizlensin mi?")) return;
+
+        fetch('/api/temizle', { method: 'POST' })
+            .then(res => res.json())
+            .then(() => {
+                document.getElementById('sayac-saldiri').innerText = "0";
+                document.getElementById('sayac-paket').innerText = "0";
+                document.getElementById('etiket-ip').innerText = "-";
+                document.getElementById('etiket-tur').innerText = "-";
+                document.getElementById('log-count').innerText = "0";
+                document.getElementById('ip-count').innerText = "0";
+                document.getElementById('trafik-count').innerText = "0";
+
+                document.getElementById('log-tablosu').innerHTML =
+                    '<tr><td colspan="4" class="text-center text-muted">Temizlendi.</td></tr>';
+
+                document.getElementById('trafik-tablosu').innerHTML =
+                    '<tr><td colspan="3" class="text-center text-muted">Temizlendi.</td></tr>';
+
+                document.getElementById('ip-tablosu').innerHTML =
+                    '<tr><td colspan="3" class="text-center text-muted">Temizlendi.</td></tr>';
+
+                chartInstance.data.datasets[0].borderColor = '#2563eb';
+                chartInstance.data.datasets[0].data = Array(40).fill(0);
+                chartInstance.update();
+            });
+    }
+
+    function guiGuncelle(aktif) {
+        const status = document.getElementById('status-badge');
+
+        if (aktif) {
+            document.getElementById('btn-baslat').classList.add('d-none');
+            document.getElementById('btn-durdur').classList.remove('d-none');
+            document.getElementById('arayuz-secimi').disabled = true;
+
+            status.innerHTML = 'AKTİF İZLEME';
+            status.className = 'tag tag-green';
+
+            if (!intervalId) intervalId = setInterval(veriCek, 1000);
+        } else {
+            document.getElementById('btn-baslat').classList.remove('d-none');
+            document.getElementById('btn-durdur').classList.add('d-none');
+            document.getElementById('arayuz-secimi').disabled = false;
+
+            status.innerHTML = 'SİSTEM BEKLEMEDE';
+            status.className = 'tag tag-blue';
+
+            if (intervalId) { clearInterval(intervalId); intervalId = null; }
+        }
+    }
+
+    function veriCek() {
+        fetch('/api/veriler')
+            .then(res => res.json())
+            .then(data => {
+                // Eğer backend aktif ama UI pasif görünüyorsa senkronla
+                if (data.sistem_durumu === "Aktif" && !document.getElementById('btn-baslat').classList.contains('d-none')) {
+                    guiGuncelle(true);
+                }
+
+                // KPI
+                document.getElementById('sayac-saldiri').innerText = data.toplam_saldiri ?? 0;
+                document.getElementById('sayac-paket').innerText = data.toplam_paket ?? 0;
+
+                const ip = (data.ozet && data.ozet.en_tehlikeli_ip) ? data.ozet.en_tehlikeli_ip : "-";
+                const tur = (data.ozet && data.ozet.en_yaygin_saldiri) ? data.ozet.en_yaygin_saldiri : "-";
+                document.getElementById('etiket-ip').innerText = ip;
+                document.getElementById('etiket-tur').innerText = tur;
+
+                document.getElementById('log-count').innerText = data.toplam_saldiri ?? 0;
+
+                // Grafik: şimdilik trend (saldırı olduysa yükselt)
+                const prev = chartInstance.data.datasets[0].data[39] || 0;
+                const isAttack = (data.toplam_saldiri ?? 0) > 0;
+                chartInstance.data.datasets[0].borderColor = isAttack ? '#dc2626' : '#2563eb';
+                const val = isAttack ? Math.min(12, prev + 2) : Math.max(0, prev - 0.6);
+                chartInstance.data.datasets[0].data.push(val);
+                chartInstance.data.datasets[0].data.shift();
+                chartInstance.update();
+
+                // IP tablosu (saldırı türü backend'den gelirse göster)
+                const ipTbody = document.getElementById('ip-tablosu');
+                const ips = Array.isArray(data.saldirganlar) ? data.saldirganlar : [];
+                document.getElementById('ip-count').innerText = ips.length;
+
+                if (ips.length > 0) {
+                    let html = "";
+                    ips.forEach(row => {
+                        const tur = row.tur || row.tahmin_sonucu || "—";
+                        html += `<tr>
+                            <td style="font-family: monospace; font-weight:800; color:#2563eb;">${row.ip}</td>
+                            <td><span class="tag tag-red">${row.sayi}</span></td>
+                            <td><span class="tag ${getTagClass(tur)}">${tur}</span></td>
+                        </tr>`;
+                    });
+                    ipTbody.innerHTML = html;
+                } else {
+                    ipTbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">Veri bekleniyor...</td></tr>`;
+                }
+
+                // Log tablosu: sadece SON 20 göster (backend 50 dönse bile)
+                const logTbody = document.getElementById('log-tablosu');
+                const logs = Array.isArray(data.saldirilar) ? data.saldirilar : [];
+                const shownLogs = logs.slice(0, 20);
+
+                if (shownLogs.length > 0) {
+                    let html = "";
+                    shownLogs.forEach(log => {
+                        html += `<tr>
+                            <td class="text-muted small">${log.tarih || "-"}</td>
+                            <td><span class="tag ${getTagClass(log.tahmin_sonucu)}">${log.tahmin_sonucu || "—"}</span></td>
+                            <td style="font-family: monospace; color:#2563eb; font-weight:800;">${log.src_ip || "-"}</td>
+                            <td style="font-family: monospace;">${log.dst_ip || "-"}</td>
+                        </tr>`;
+                    });
+                    logTbody.innerHTML = html;
+                } else {
+                    logTbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Kayıt yok.</td></tr>`;
+                }
+
+                // Trafik tablosu
+                const trafikTbody = document.getElementById('trafik-tablosu');
+                const pkts = Array.isArray(data.son_paketler) ? data.son_paketler : [];
+                document.getElementById('trafik-count').innerText = pkts.length;
+
+                if (pkts.length > 0) {
+                    let html = "";
+                    pkts.forEach(pkt => {
+                        const proto = pkt.proto || "IP";
+                        const color = (proto === "TCP") ? "#16a34a" : (proto === "UDP" ? "#2563eb" : "#64748b");
+                        const src = pkt.src || "-";
+                        const dst = pkt.dst || "-";
+                        const port = (pkt.port !== undefined && pkt.port !== null) ? pkt.port : "-";
+                        const time = pkt.time || "-";
+
+                        html += `<tr>
+                            <td class="text-muted small">${time}</td>
+                            <td style="font-family: monospace;">${src} → ${dst}:${port}</td>
+                            <td style="color:${color}; font-weight:900; font-size:0.78rem;">${proto}</td>
+                        </tr>`;
+                    });
+                    trafikTbody.innerHTML = html;
+                } else {
+                    trafikTbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">Dinleniyor...</td></tr>`;
+                }
+            })
+            .catch(() => {
+                // Backend kısa süreli gidip gelirse UI kırılmasın
+            });
+    }
+</script>
+
+</body>
+</html>
