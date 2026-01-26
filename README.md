@@ -105,41 +105,6 @@ Tarayıcınızda açın: **http://localhost:5000**
 
 ---
 
-## Tespit Yetenekleri
-
-### Kural Bazlı Tespit
-
-| Saldırı Türü | Açıklama | Güven |
-|--------------|----------|-------|
-| **DDoS (SYN Flood)** | Yüksek SYN paket oranı tespiti | 100% |
-| **Port Scan** | Çok sayıda porta erişim denemesi | 100% |
-| **SSH Brute Force** | SSH servisine yoğun bağlantı | 95% |
-| **FTP Brute Force** | FTP servisine yoğun bağlantı | 95% |
-| **Telnet Brute Force** | Telnet servisine yoğun bağlantı | 92% |
-| **SQL Injection** | SQL komut paternleri (HTTP) | 92% |
-| **XSS** | JavaScript injection paternleri | 90% |
-| **Path Traversal** | Dizin geçiş denemeleri | 90% |
-| **Command Injection** | Sistem komut paternleri | 90% |
-| **DNS Tunneling** | Anormal DNS sorgu yapısı | 90% |
-
-### AI Bazlı Tespit
-
-LSTM modeli CICIDS2017 veri seti ile eğitilmiştir ve şu saldırıları tespit eder:
-
-- DoS/DDoS varyantları
-- Web saldırıları (SQL Injection, XSS, vb.)
-- Infiltration
-- Botnet trafiği
-- Bilinmeyen/yeni anomaliler
-
-**Model Performansı:**
-- Doğruluk: %94-97
-- Kesinlik: %93-97
-- Duyarlılık: %93-97
-- F1-Skor: %94-97
-
----
-
 ## Web Arayüzü
 
 ### Ana Dashboard
